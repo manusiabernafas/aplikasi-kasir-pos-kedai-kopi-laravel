@@ -1,0 +1,104 @@
+# Kopi POS — Kasir Kedai Kopi + Layar Barista (Laravel 12)
+
+Aplikasi kasir (POS) untuk kedai kopi, kafe, atau warung makan yang dibangun dengan Laravel 12 dan MySQL. Kasir mencatat pesanan lengkap dengan varian seperti ukuran, suhu, gula, dan tambahan; pesanan langsung muncul di layar barista; lalu nomor antrean tampil di layar TV saat pesanan siap diambil.
+
+Pemilik mendapat laporan yang benar-benar terpakai untuk mengelola kedai: omzet dibanding periode sebelumnya, menu terlaris, jam ramai untuk mengatur jadwal barista, metode pembayaran, waktu penyajian, dan selisih kas setiap shift. Kodenya mengikuti struktur Laravel standar (controller, model Eloquent, migration, seeder, Blade) sehingga cocok untuk belajar Laravel maupun langsung dipakai.
+
+## Cara kerja
+
+Kasir wajib membuka shift dengan modal awal sebelum menerima pesanan. Saat menu dipilih, kasir menentukan opsi (misal Large, Dingin, Gula sedikit, Extra shot) dan jumlah, lalu memilih dine in dengan nomor meja atau takeaway. Saat dibayar, server menghitung ulang semua harga, opsi, diskon, pajak, dan kembalian dari database, memvalidasi opsi wajib, lalu memberi nomor antrean harian di dalam transaksi database dengan penguncian baris agar dua kasir tidak pernah mendapat nomor yang sama. Pesanan dine in juga bisa disimpan sebagai bayar nanti.
+
+Layar barista memuat pesanan setiap 4 detik dan berbunyi saat ada pesanan baru. Barista memindahkan pesanan dari Baru ke Sedang dibuat lalu Siap; timer berubah kuning setelah 5 menit dan merah setelah 10 menit. Pesanan yang siap tampil besar di layar TV pelanggan. Menu tanpa proses dapur (misal air mineral) langsung selesai.
+
+Saat tutup shift, kasir memasukkan uang tunai yang dihitung di laci; sistem membandingkannya dengan modal awal ditambah penjualan tunai dan menampilkan selisihnya. Pemilik mengelola menu, opsi, pengguna, pajak, dan melihat laporan lengkap yang bisa diekspor ke CSV.
+
+## Fitur
+
+- Kasir (POS) layar sentuh: grid menu per kategori, pencarian, dan keranjang di samping
+- Varian & opsi menu: ukuran, suhu, gula, level pedas, dan tambahan berbayar (extra shot, oat milk, dll)
+- Grup opsi wajib / opsional dan pilih satu / banyak, bisa dipasang ke banyak menu
+- Dine in (pilih meja) atau takeaway, nama pelanggan untuk dipanggil
+- Diskon persen atau nominal dan pajak / PB1 opsional
+- Pembayaran tunai (tombol uang pas & pecahan, hitung kembalian), QRIS, dan debit
+- Bayar nanti (open bill) untuk dine in, dilunasi kapan saja
+- Nomor antrean harian otomatis (A-001 dine in, B-001 takeaway), aman saat banyak kasir transaksi bersamaan
+- Struk thermal 58mm siap cetak
+- Layar barista (kitchen display): kolom Baru, Sedang dibuat, Siap; timer per pesanan dengan warna peringatan
+- Bunyi notifikasi pesanan baru tanpa file audio, mode layar penuh
+- Barista bisa menandai menu habis langsung dari layar dapur
+- Layar TV pelanggan: daftar pesanan siap diambil dan yang sedang disiapkan
+- Shift kasir: modal awal, ringkasan per metode bayar, hitung selisih kas saat tutup, cetak rekap shift
+- Riwayat transaksi dengan filter tanggal, status, metode, dan pencarian; pembatalan dengan alasan
+- Laporan pemilik: omzet & transaksi dibanding periode sebelumnya, grafik harian, menu terlaris, jam ramai (heatmap), metode bayar, dine in vs takeaway, waktu penyajian, selisih kas per shift
+- Ekspor penjualan ke CSV (Excel)
+- Kelola menu (foto, harga, ketersediaan), kategori, dan grup opsi
+- 3 peran: Pemilik, Kasir, Barista dengan hak akses berbeda
+- Harga, opsi, diskon, dan kembalian selalu dihitung ulang di server
+- Data contoh 30 hari (2.000+ transaksi) mengikuti tanggal saat setup
+- Tema gelap yang nyaman untuk layar kasir seharian, tanpa build tool (tanpa npm)
+- Laravel 12 + MySQL dengan struktur standar (controller, Eloquent, migration, seeder, Blade)
+
+## Instalasi
+
+**Kebutuhan:** PHP 8.2 atau lebih baru (XAMPP 8.2+ / Laragon), MySQL/MariaDB, dan [Composer](https://getcomposer.org) (Laragon sudah menyertakannya).
+
+1. Ekstrak ZIP lalu pindahkan folder `kopi-pos` ke `C:\xampp\htdocs\kopi-pos` (atau `C:\laragon\www\kopi-pos`).
+
+2. Jalankan **Apache** dan **MySQL**, buka `http://localhost/phpmyadmin`, lalu buat database baru bernama `kopi_pos`.
+
+3. Jalankan setup:
+   - **Windows:** klik dua kali `setup.bat` (atau buka *Shell* di XAMPP Control Panel, masuk ke folder project, lalu ketik `setup.bat`).
+   - **Linux/macOS:** `bash setup.sh`
+
+   Script ini menjalankan `composer install` (jika folder `vendor` belum ada), membuat file `.env`, kunci aplikasi, tabel database, data contoh 30 hari, dan link folder foto.
+
+4. Buka `http://localhost/kopi-pos` lalu login (password semua `admin123`):
+   - Pemilik: `owner`
+   - Kasir: `kasir` (shift sudah terbuka di data contoh)
+   - Barista: `barista`
+
+5. Layar TV pesanan siap: `http://localhost/kopi-pos/layar` (bisa dibuka di TV/tablet dalam jaringan yang sama).
+
+**Tanpa XAMPP:** dari folder project jalankan `bash setup.sh` lalu `php artisan serve`, buka `http://127.0.0.1:8000`.
+
+**Jika user/password MySQL berbeda**, ubah `DB_USERNAME` dan `DB_PASSWORD` di file `.env` lalu jalankan setup lagi.
+
+**Untuk hosting:** arahkan document root ke folder `public/`, ubah `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_URL` di `.env`.
+
+## Halaman
+
+| Halaman | Role | URL |
+|---|---|---|
+| Kasir | Pemilik, Kasir | `/kasir` |
+| Layar barista | Semua | `/dapur` |
+| Layar TV pelanggan | Tanpa login | `/layar` |
+| Shift | Pemilik, Kasir | `/shift` |
+| Riwayat | Pemilik, Kasir | `/riwayat` |
+| Laporan | Pemilik | `/laporan` |
+| Menu & opsi | Pemilik | `/menu` |
+| Pengguna | Pemilik | `/pengguna` |
+| Pengaturan | Pemilik | `/pengaturan` |
+
+## Struktur penting
+
+```
+app/Http/Controllers/KasirController.php   Simpan pesanan, nomor antrean, bayar, batal
+app/Http/Controllers/DapurController.php   Data & status layar barista
+app/Http/Controllers/LaporanController.php Laporan & ekspor CSV
+app/Models/                                Order, Menu, OpsiGrup, Shift, dll
+database/migrations/                       Struktur tabel
+database/seeders/DatabaseSeeder.php        Data contoh 30 hari
+resources/views/                           Tampilan Blade
+public/css/app.css                         Tema
+```
+
+## Mengisi ulang data contoh
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+Untuk mulai dari nol tanpa data contoh, hapus isi method `run()` pada `DatabaseSeeder` kecuali pembuatan akun pemilik, lalu jalankan perintah di atas.
+
+---
+Source code ini dibagikan gratis oleh **Papicode** — https://papicode.id
